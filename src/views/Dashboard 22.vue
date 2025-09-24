@@ -1,10 +1,8 @@
 <script setup>
-    import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+  import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
     import jsQR from 'jsqr';
     import { useLayout } from '@/layout/composables/layout';
-    const visible = ref(false);
-    const finded = ref({});
-    const modalHead = ref('GRADUANDO VERIFICADO ✔️');
+    import QrScanner from 'qr-scanner';
 
 
 const { isDarkTheme } = useLayout();
@@ -448,158 +446,402 @@ const estudiantesData = [
 }
 ];
 
-// Variables reactivas
-const video = ref(null);
-const notificationMessage = ref('');
-const notificationClass = ref('');
-const escaneados = ref(new Set());
-let videoStream = null;
-const isPaused = ref(false);
 
-// Métodos
-const showNotification = (message, type) => {
-  notificationMessage.value = message;
-  notificationClass.value = type;
-};
 
-const handleQRCode = (data) => {
-  if (isPaused.value) return;
-  isPaused.value = true;
-  const cedulaRegex = /ci:\s*([VvEe]-\d{1,2}\.\d{3}\.\d{3}|\d+)/i;
-  const match = data.match(cedulaRegex);
-  //console.log(data);
+// Referencias reactivas
+const videoElement = ref(null);
+const isCameraActive = ref(false);
+const isLoading = ref(false);
+const scannedResult = ref(null);
+const validationResult = ref(null);
+const scannedCIs = ref([]);
+const cameraError = ref(null);
+const qrScanner = ref(null);
+
+// Función para extraer la cédula del texto del QR
+const extractCIFromQR = (qrText) => {
+  if (!qrText) return null;
   
-  let studentCI = null;
-
-  if (match && match[1]) {
-    // Si la cédula tiene el formato V-XX.XXX.XXX, la limpiamos a solo números
-    studentCI = match[1]
-    //console.log(studentCI);
-  } else {
-    // Si no coincide con el patrón, asumimos que el QR contiene solo la cédula
-    studentCI = data.trim();
-  }
-
-  const estudianteEncontrado = estudiantesData.find(estudiante => estudiante.ci === studentCI);
-//console.log("Estudiante encontrado:", estudianteEncontrado);
-  if (estudianteEncontrado) {
-    
-    if(escaneados.value.has(studentCI)){
-      modalHead.value = 'GRADUANDO YA ESCANEADO ⚠️';
-      visible.value = true;
-
-      setTimeout(() => {
-        visible.value = false;
-        isPaused.value = false;
-      }, 3000); // Limpiar notificación después de 3 segundos
-
-    } else {
-      escaneados.value.add(studentCI);
-      const nombre = estudianteEncontrado.nombres;
-      modalHead.value = 'GRADUANDO VERIFICADO ✔️';
-      finded.value = {
-        nombre: estudianteEncontrado.nombres,
-        ci: estudianteEncontrado.ci,
-        titulo: estudianteEncontrado.titulo
+  const lines = qrText.split('\n');
+  for (const line of lines) {
+    if (line.toLowerCase().includes('cédula') || line.toLowerCase().includes('cedula')) {
+      const parts = line.split(':');
+      if (parts.length > 1) {
+        return parts[1].trim();
       }
+    }
+  }
+  return null;
+};
+
+// Función para buscar estudiante por cédula
+const findStudentByCI = (ci) => {
+  return estudiantesData.find(estudiante => 
+    estudiante.ci.toLowerCase() === ci.toLowerCase()
+  );
+};
+
+// Función para validar el resultado del QR
+const validateQRResult = (ci) => {
+  const estudiante = findStudentByCI(ci);
+  const alreadyScanned = scannedCIs.value.includes(ci);
+
+  if (!estudiante) {
+    return {
+      type: 'error',
+      title: '❌ Cédula no encontrada',
+      message: 'La cédula escaneada no existe en la base de datos.'
+    };
+  }
+
+  if (alreadyScanned) {
+    return {
+      type: 'warning',
+      title: '⚠️ Ya escaneado',
+      message: 'Esta cédula ya fue escaneada anteriormente.',
+      estudiante: estudiante
+    };
+  }
+
+  // Agregar a la lista de escaneados
+  scannedCIs.value.push(ci);
+  
+  return {
+    type: 'success',
+    title: '✅ Válido',
+    message: 'Cédula verificada correctamente.',
+    estudiante: estudiante
+  };
+};
+
+// Función para obtener nombre del estudiante
+const getStudentName = (ci) => {
+  const estudiante = findStudentByCI(ci);
+  return estudiante ? estudiante.nombres : 'No encontrado';
+};
+
+// Función para manejar el resultado del QR
+const handleQRScan = (result) => {
+  if (result && result.data) {
+    const ci = extractCIFromQR(result.data);
+    
+    if (ci) {
+      scannedResult.value = ci;
+      validationResult.value = validateQRResult(ci);
       
-      visible.value = true; 
+      // Opcional: detener la cámara después de escanear exitosamente
       setTimeout(() => {
-        visible.value = false;
-        escaneados.value.add(studentCI);
-        isPaused.value = false;
-      }, 3000); // Limpiar notificación después de 3 segundos
+        //stopCamera();
+      }, 2000);
+    } else {
+      scannedResult.value = 'No se pudo extraer la cédula';
+      validationResult.value = {
+        type: 'error',
+        title: '❌ Formato incorrecto',
+        message: 'El QR no contiene información de cédula en el formato esperado.'
+      };
     }
-  } else {
-    showNotification("Estudiante no encontrado. ⚠️", 'error');
-
   }
 };
 
-const tick = () => {
-  if (video.value && video.value.readyState === video.value.HAVE_ENOUGH_DATA) {
-    const canvas = document.createElement('canvas');
-    canvas.height = video.value.videoHeight;
-    canvas.width = video.value.videoWidth;
-    const context = canvas.getContext('2d');
-    context.drawImage(video.value, 0, 0, canvas.width, canvas.height);
-
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: "dontInvert",
-    });
-
-    if (code) {
-      handleQRCode(code.data);
-    }
-  }
-  requestAnimationFrame(tick);
-};
-
-const startScanner = async () => {
+// Función para inicializar el scanner de QR
+const initializeQrScanner = async () => {
   try {
-    videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    if (video.value) {
-      video.value.srcObject = videoStream;
-      video.value.setAttribute('playsinline', true);
-      video.value.play();
-      tick();
+    // Importación dinámica para evitar problemas de SSR
+    const QrScannerModule = await import('qr-scanner');
+    const QrScanner = QrScannerModule.default || QrScannerModule.QrScanner;
+    
+    // Esperar a que el elemento de video esté disponible en el DOM
+    await nextTick();
+    
+    if (!videoElement.value) {
+      throw new Error('Elemento de video no encontrado');
     }
-  } catch (err) {
-    console.error("No se pudo acceder a la cámara:", err);
-    showNotification("Error: No se pudo acceder a la cámara. Asegúrate de dar los permisos.", 'error');
+
+    // Configurar el scanner
+    qrScanner.value = new QrScanner(
+      videoElement.value,
+      handleQRScan,
+      {
+        highlightScanRegion: true,
+        highlightCodeOutline: true,
+        maxScansPerSecond: 3,
+        returnDetailedScanResult: true
+      }
+    );
+
+    return QrScanner;
+  } catch (error) {
+    console.error('Error al inicializar QR Scanner:', error);
+    throw error;
   }
 };
 
-const stopScanner = () => {
-  if (videoStream) {
-    videoStream.getTracks().forEach(track => track.stop());
+// Función para activar/desactivar cámara
+const toggleCamera = async () => {
+  if (isCameraActive.value) {
+    stopCamera();
+  } else {
+    await startCamera();
   }
 };
 
-// Ciclos de vida del componente
-onMounted(() => {
-  startScanner();
-});
+// Función para iniciar la cámara
+const startCamera = async () => {
+  try {
+    isLoading.value = true;
+    cameraError.value = null;
+    scannedResult.value = null;
+    validationResult.value = null;
 
-onBeforeUnmount(() => {
-  stopScanner();
+    // Inicializar QR Scanner
+    const QrScanner = await initializeQrScanner();
+    
+    // Verificar si hay cámara disponible
+    const hasCamera = await QrScanner.hasCamera();
+    if (!hasCamera) {
+      throw new Error('No se encontró una cámara disponible en este dispositivo');
+    }
+
+    // Iniciar el scanner
+    await qrScanner.value.start();
+    isCameraActive.value = true;
+    
+  } catch (error) {
+    console.error('Error al iniciar cámara:', error);
+    cameraError.value = error.message;
+    stopCamera();
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Función para detener la cámara
+const stopCamera = () => {
+  if (qrScanner.value) {
+    try {
+      qrScanner.value.stop();
+      qrScanner.value.destroy();
+    } catch (error) {
+      console.warn('Error al detener cámara:', error);
+    }
+    qrScanner.value = null;
+  }
+  isCameraActive.value = false;
+};
+
+// Función para reintentar la cámara
+const retryCamera = async () => {
+  cameraError.value = null;
+  await startCamera();
+};
+
+// Función para limpiar lista de escaneados
+const clearScannedList = () => {
+  scannedCIs.value = [];
+};
+
+// Limpiar al desmontar el componente
+onUnmounted(() => {
+  stopCamera();
 });
 </script>
 
 <template>
+  <div class="qr-reader-container">
+    <h1>Lector de Códigos QR</h1>
+    
+    <!-- Botón para activar/desactivar cámara -->
+    <button 
+      @click="toggleCamera" 
+      :class="['camera-btn', { 'active': isCameraActive }]"
+      :disabled="isLoading"
+    >
+      {{ isCameraActive ? 'Detener Cámara' : 'Activar Cámara' }}
+    </button>
 
-  <div id="app">
-    <h1>Escáner de invitaciones de grado 🧑‍🎓</h1>
-    <video ref="video" id="qr-video"></video>
-    <!-- <div :class="notificationClass" id="notification-box">{{ notificationMessage }}</div>-->
+    <!-- Área de video para la cámara -->
+    <div class="video-container" v-if="isCameraActive">
+      <video ref="videoElement" class="video-preview"></video>
+      <div class="scan-overlay"></div>
+    </div>
+
+    <!-- Resultados del escaneo -->
+    <div class="results-container">
+      <div v-if="scannedResult" class="result-card">
+        <h3>Resultado del Escaneo:</h3>
+        <p><strong>Cédula detectada:</strong> {{ scannedResult }}</p>
+        
+        <div v-if="validationResult" :class="['validation-message', validationResult.type]">
+          <h4>{{ validationResult.title }}</h4>
+          <p v-if="validationResult.estudiante">
+            <strong>Nombre:</strong> {{ validationResult.estudiante.nombres }}<br>
+            <strong>Título:</strong> {{ validationResult.estudiante.titulo }}
+          </p>
+          <p>{{ validationResult.message }}</p>
+        </div>
+      </div>
+
+      <div v-else-if="isCameraActive" class="scanning-message">
+        <p>Enfoca el código QR hacia la cámara...</p>
+      </div>
+    </div>
+
+    <!-- Lista de cédulas ya escaneadas -->
+    <div class="scanned-list" v-if="scannedCIs.length > 0">
+      <h3>Cédulas Escaneadas ({{ scannedCIs.length }})</h3>
+      <ul>
+        <li v-for="ci in scannedCIs" :key="ci">
+          {{ ci }} - {{ getStudentName(ci) }}
+        </li>
+      </ul>
+      <button @click="clearScannedList" class="clear-btn">Limpiar Lista</button>
+    </div>
   </div>
-
-
-  
-        <Dialog v-model:visible="visible" modal :header="modalHead" :style="{ width: '25rem' }">
-            <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ finded.nombre }}</span>
-            <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ finded.ci }}</span>
-            <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ finded.titulo }}</span>
-      
-            <div class="flex justify-end gap-2">
-                <Button type="button" label="Cerrar" severity="secondary" @click="visible = false"></Button>
-            </div>
-        </Dialog>
-
 </template>
 
 
-
 <style scoped>
-#qr-video {
-  width: 300px;
-  height: 300px;
-  object-fit: cover;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+.qr-reader-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.camera-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.camera-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.camera-btn.active {
+  background-color: #dc3545;
+}
+
+.camera-btn.active:hover {
+  background-color: #c82333;
+}
+
+.camera-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto 20px;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.video-preview {
+  width: 100%;
+  height: auto;
   display: block;
-  margin: 0 auto 1rem auto;
+}
+
+.scan-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #00ff00;
+  box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.results-container {
+  margin: 20px 0;
+}
+
+.result-card {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.scanning-message {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.validation-message {
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+.validation-message.success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.validation-message.warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
+.validation-message.error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.scanned-list {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.scanned-list ul {
+  list-style-type: none;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.scanned-list li {
+  padding: 8px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.scanned-list li:last-child {
+  border-bottom: none;
+}
+
+.clear-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.clear-btn:hover {
+  background-color: #545b62;
 }
 </style>
 
