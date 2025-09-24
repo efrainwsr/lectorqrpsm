@@ -1,11 +1,11 @@
 <script setup>
-    import { ref, onMounted } from 'vue'; 
+    /*import { ref, onMounted } from 'vue'; 
     import { useToast } from 'primevue/usetoast';
     const toast = useToast();
 
     import { app, db } from "../service/firebaseConfig.js";
     import {collection ,getDocs,getDoc, query, doc, addDoc } from "firebase/firestore"; 
-    import {validateFields /*, validate*/} from "../assets/validators.js"
+    import {validateFields} from "../assets/validators.js"
 
     const categoryItems = ref([]);
     const sizeItems = ref([]);
@@ -98,10 +98,11 @@ const saveMenuItem = async (e)=>{
         toast.add({ severity: 'error', summary: 'Error', detail: 'Por favor, complete todos los campos.', life: 3000 });
     }
 }; 
-
+*/
 </script>
 
 <template>
+    <!--
     <div class="grid">
         <Toast/>
         <div class="col-12">
@@ -119,7 +120,7 @@ const saveMenuItem = async (e)=>{
                             <label for="desc">Detalle</label>
                             <InputText v-model="menuModel.desc" id="desc" type="text"  placeholder="Ej. Especial" />
                         </div>
-                    <!--
+                    
                     <div class="field col-12">
                         <label for="address">Address</label>
                         <InputText id="address" rows="4" />
@@ -127,7 +128,7 @@ const saveMenuItem = async (e)=>{
                     <div class="field col-12 md:col-6">
                         <label for="city">City</label>
                         <InputText id="city" type="text" />
-                    </div>-->
+                    </div>
 
                     <div class="field col-12 md:col-3">
                         <label for="price">Precio</label>
@@ -164,6 +165,7 @@ const saveMenuItem = async (e)=>{
     </div>
 
 </div>
+-->
 </template>
 
 
