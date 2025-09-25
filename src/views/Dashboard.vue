@@ -474,7 +474,7 @@ const handleQRCode = (data) => {
   if (match && match[1]) {
     // Si la cédula tiene el formato V-XX.XXX.XXX, la limpiamos a solo números
     studentCI = match[1]
-     stopScanner();
+     //stopScanner();
     //console.log(studentCI);
   } else {
     // Si no coincide con el patrón, asumimos que el QR contiene solo la cédula
@@ -493,7 +493,7 @@ const handleQRCode = (data) => {
       setTimeout(() => {
         visible.value = false;
         isPaused.value = false;
-        startScanner(); // Reinicia la cámara
+        //startScanner(); // Reinicia la cámara
       }, 2000); // Limpiar notificación después de 2 segundos
 
     } else {
@@ -511,7 +511,7 @@ const handleQRCode = (data) => {
       setTimeout(() => {
         visible.value = false;
         isPaused.value = false;
-        startScanner(); // Reinicia la cámara
+        //startScanner(); // Reinicia la cámara
       }, 2000); // Limpiar notificación después de 2 segundos
     }
   } else {
