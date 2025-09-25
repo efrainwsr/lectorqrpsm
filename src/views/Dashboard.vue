@@ -463,7 +463,7 @@ const showNotification = (message, type) => {
 };
 
 const handleQRCode = (data) => {
-  if (isPaused.value) return;
+  if (isPaused.value || visible.value) return;
   isPaused.value = true;
   const cedulaRegex = /ci:\s*([VvEe]-\d{1,2}\.\d{3}\.\d{3}|\d+)/i;
   const match = data.match(cedulaRegex);
@@ -474,6 +474,7 @@ const handleQRCode = (data) => {
   if (match && match[1]) {
     // Si la cédula tiene el formato V-XX.XXX.XXX, la limpiamos a solo números
     studentCI = match[1]
+     stopScanner();
     //console.log(studentCI);
   } else {
     // Si no coincide con el patrón, asumimos que el QR contiene solo la cédula
@@ -485,30 +486,33 @@ const handleQRCode = (data) => {
   if (estudianteEncontrado) {
     
     if(escaneados.value.has(studentCI)){
+      isPaused.value = true;
       modalHead.value = 'GRADUANDO YA ESCANEADO ⚠️';
       visible.value = true;
-
+      // Apaga la cámara
       setTimeout(() => {
         visible.value = false;
         isPaused.value = false;
-      }, 3000); // Limpiar notificación después de 3 segundos
+        startScanner(); // Reinicia la cámara
+      }, 2000); // Limpiar notificación después de 2 segundos
 
     } else {
+      isPaused.value = true;
       escaneados.value.add(studentCI);
-      const nombre = estudianteEncontrado.nombres;
+      //const nombre = estudianteEncontrado.nombres;
       modalHead.value = 'GRADUANDO VERIFICADO ✔️';
       finded.value = {
         nombre: estudianteEncontrado.nombres,
         ci: estudianteEncontrado.ci,
         titulo: estudianteEncontrado.titulo
       }
-      
       visible.value = true; 
+     
       setTimeout(() => {
         visible.value = false;
-        escaneados.value.add(studentCI);
         isPaused.value = false;
-      }, 3000); // Limpiar notificación después de 3 segundos
+        startScanner(); // Reinicia la cámara
+      }, 2000); // Limpiar notificación después de 2 segundos
     }
   } else {
     showNotification("Estudiante no encontrado. ⚠️", 'error');
@@ -517,6 +521,10 @@ const handleQRCode = (data) => {
 };
 
 const tick = () => {
+  if (isPaused.value) {
+    requestAnimationFrame(tick);
+    return;
+  }
   if (video.value && video.value.readyState === video.value.HAVE_ENOUGH_DATA) {
     const canvas = document.createElement('canvas');
     canvas.height = video.value.videoHeight;
@@ -582,9 +590,9 @@ onBeforeUnmount(() => {
             <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ finded.ci }}</span>
             <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ finded.titulo }}</span>
       
-            <div class="flex justify-end gap-2">
-                <Button type="button" label="Cerrar" severity="secondary" @click="visible = false"></Button>
-            </div>
+      <div class="flex justify-end gap-2">
+        <Button type="button" label="Cerrar" severity="secondary" @click="() => { visible = false; isPaused = false; startScanner() }"></Button>
+      </div>
         </Dialog>
 
 </template>
