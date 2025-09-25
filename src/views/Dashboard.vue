@@ -452,7 +452,29 @@ const estudiantesData = [
 const video = ref(null);
 const notificationMessage = ref('');
 const notificationClass = ref('');
+const ESCANEADOS_KEY = 'escaneados_qr';
 const escaneados = ref(new Set());
+
+// Cargar escaneados desde localStorage al iniciar
+onMounted(() => {
+  const saved = localStorage.getItem(ESCANEADOS_KEY);
+  if (saved) {
+    try {
+      const arr = JSON.parse(saved);
+      if (Array.isArray(arr)) {
+        escaneados.value = new Set(arr);
+      }
+    } catch (e) {
+      // Si hay error, ignorar y dejar Set vacío
+    }
+  }
+  startScanner();
+});
+
+// Guardar escaneados en localStorage cada vez que cambian
+watch(escaneados, (val) => {
+  localStorage.setItem(ESCANEADOS_KEY, JSON.stringify(Array.from(val)));
+}, { deep: true });
 let videoStream = null;
 const isPaused = ref(false);
 
@@ -498,7 +520,7 @@ const handleQRCode = (data) => {
 
     } else {
       isPaused.value = true;
-      escaneados.value.add(studentCI);
+  escaneados.value.add(studentCI);
       //const nombre = estudianteEncontrado.nombres;
       modalHead.value = 'GRADUANDO VERIFICADO ✔️';
       finded.value = {
@@ -578,7 +600,7 @@ onBeforeUnmount(() => {
 <template>
 
   <div id="app">
-    <h1>Escáner de invitaciones de grado 🧑‍🎓</h1>
+    <h1>Escaner de invitaciones de grado</h1>
     <video ref="video" id="qr-video"></video>
     <!-- <div :class="notificationClass" id="notification-box">{{ notificationMessage }}</div>-->
   </div>
@@ -601,8 +623,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 #qr-video {
-  width: 300px;
-  height: 300px;
+  width: 420px;
+  height: 500px;
   object-fit: cover;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.15);

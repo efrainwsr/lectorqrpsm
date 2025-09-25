@@ -75,9 +75,9 @@ const isOutsideClicked = (event) => {
         </button>
 
 
-            <Chip :label="store.total.value.toFixed(2)" icon="pi pi-dollar"></Chip>
+            <!--<Chip :label="store.total.value.toFixed(2)" icon="pi pi-dollar"></Chip>
             <Chip :label="'Bs  ' + store.totalBs.value.toFixed(2)"  ></Chip>
-            <Chip :label="'Tasa: '+store.bcvPrice.value"></Chip>
+            <Chip :label="'Tasa: '+store.bcvPrice.value"></Chip>-->
 
         <button class="p-link layout-topbar-menu-button layout-topbar-button" @click="onTopBarMenuButton()">
             <i class="pi pi-ellipsis-v"></i>
