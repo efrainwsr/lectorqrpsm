@@ -50,7 +50,8 @@
         <div class="inline-flex items-center justify-center gap-2">
             <i v-if="modalTitle=='GRADUANDO VERIFICADO'" :class="modalIcon" style="color: green; font-size: 2rem" > </i>
             <i v-if="modalTitle=='GRADUANDO YA INGRESADO'" :class="modalIcon" style="color: orange; font-size: 2rem" > </i>
-            <span class="font-bold whitespace-nowrap">{{ modalTitle }}</span>
+            <i v-if="modalTitle=='NO ESTA EN LA LISTA DE INVITADOS'" :class="modalIcon" style="color: red; font-size: 2rem" > </i>
+            <span class="font-bold whitespace-nowrap ">{{ modalTitle }}</span>
         </div>
     </template>
       <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ modalData.nombres.toUpperCase() }}</span>
@@ -234,7 +235,7 @@ async function onScanSuccess(decodedText, decodedResult) {
   
   // Buscar en estudiantesData
   const found = estudiantesData.find(s => normalizeCI(s.ci) == extracted)
-  //console.log("FOUND", found)
+  console.log("FOUND", found)
   
   if (found) {
     // opcional: detener tras cada lectura exitosa
@@ -244,9 +245,13 @@ async function onScanSuccess(decodedText, decodedResult) {
     if(already){
       modalTitle.value = 'GRADUANDO YA INGRESADO'
       modalIcon.value = 'pi pi-exclamation-triangle'; // icono de advertencia
+        modalData.value = found
+        showModal.value = true
     }else{
       modalTitle.value = 'GRADUANDO VERIFICADO'
       modalIcon.value = 'pi pi-check'; // icono de éxito
+        modalData.value = found
+        showModal.value = true
     }
     
     if (!already) {
@@ -255,12 +260,12 @@ async function onScanSuccess(decodedText, decodedResult) {
     }
   } else {
     isScanning.value = false // opcional: detener tras cada lectura
-    modalData.value = { nombres: '?', ci: extracted, titulo: '?' }
-    modalTitle.value = 'La CI no coincide con la lista de estudiantes.'
-    modalIcon.value = 'pi pi-times-circle'; // icono de error
+    showModal.value = true ;
+    modalData.value = { nombres: '', ci: extracted, titulo: '' }
+    modalTitle.value = 'NO ESTA EN LA LISTA DE INVITADOS'
+    modalIcon.value = 'pi pi-times'; // icono de error
   }
-  modalData.value = found
-  showModal.value = true
+
 }
 
 // ------- iniciar/ detener scanner -------
