@@ -1,28 +1,28 @@
 <template>
   <div class="container">
     <h1>Escáner QR - Estudiantes</h1>
-
-  <div class="controls">
+    
+    <div class="controls">
       <label for="cameraSelect">Seleccionar cámara:</label>
       <Select id="cameraSelect" v-model="selectedCameraId">
         <option v-for="cam in cameras" :key="cam.id" :value="cam.id">
           {{ cam.label }}
         </option>
       </Select>
-  </div>
-
+    </div>
+    
     <!--<div class="card flex justify-center">
-        <Select v-model="selectedCameraId" :options="cameras.id" :optionLabel="cameras.label" placeholder="Select a City" checkmark :highlightOnSelect="false" class="w-full md:w-56"></Select>
+      <Select v-model="selectedCameraId" :options="cameras.id" :optionLabel="cameras.label" placeholder="Select a City" checkmark :highlightOnSelect="false" class="w-full md:w-56"></Select>
     </div>-->
-
+    
     <div class="controls flex justify-center">
       <Button @click="startScanner" severity="success" :disabled="isScanning" class="mx-1">Iniciar</Button>
       <Button @click="stopScanner" severity="warning" :disabled="!isScanning" class="mx-1">Detener</Button>
       <Button @click="clearScanned" severity="danger" class="mx-1">Borrar almacenados</Button>
     </div>
-
+    
     <div id="reader" style="width: 500px; max-width: 100%; margin-top: 1rem; margin-bottom: 1rem;"></div>
-
+    
     <div class="card flex justify-center">
       <span class="text-surface-500 dark:text-surface-400 block mb-2"></span>
       <div v-if="scanned.length">
@@ -32,30 +32,37 @@
       </div>
       <p v-else>No hay escaneados aún.</p>
     </div>
-
-     <!--<div class="card flex justify-center">
-        <VirtualScroller :items="scanned" :itemSize="50" class="border border-surface-200 dark:border-surface-700 rounded" style="width: 650px; height: 200px">
-            <template v-slot:item="{ item, options }">
-                <div :class="['flex items-center p-1', { 'bg-surface-100 dark:bg-surface-700': options.odd }]" style="height: 20px">{{ item.ci.toUpperCase()+ ' - ' + item.nombres.toUpperCase()+ ' - ' + item.titulo.toUpperCase() }}</div>
-            </template>
-        </VirtualScroller>
+    
+    <!--<div class="card flex justify-center">
+      <VirtualScroller :items="scanned" :itemSize="50" class="border border-surface-200 dark:border-surface-700 rounded" style="width: 650px; height: 200px">
+        <template v-slot:item="{ item, options }">
+          <div :class="['flex items-center p-1', { 'bg-surface-100 dark:bg-surface-700': options.odd }]" style="height: 20px">{{ item.ci.toUpperCase()+ ' - ' + item.nombres.toUpperCase()+ ' - ' + item.titulo.toUpperCase() }}</div>
+        </template>
+      </VirtualScroller>
     </div>-->
-
-
-
+    
+    
+    
     <!-- Modal -->
-
-    <Dialog v-model:visible="showModal" modal :header="modalTitle" :style="{ width: '25rem' }">
-            <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ modalData.nombres.toUpperCase() }}</span>
-            <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ modalData.ci.toUpperCase() }}</span>
-            <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ modalData.titulo.toUpperCase() }}</span>
+    
+    <Dialog v-model:visible="showModal" modal :style="{ width: '25rem' }">
+      <template #header>
+        <div class="inline-flex items-center justify-center gap-2">
+            <i v-if="modalTitle=='GRADUANDO VERIFICADO'" :class="modalIcon" style="color: green; font-size: 2rem" > </i>
+            <i v-if="modalTitle=='GRADUANDO YA INGRESADO'" :class="modalIcon" style="color: orange; font-size: 2rem" > </i>
+            <span class="font-bold whitespace-nowrap">{{ modalTitle }}</span>
+        </div>
+    </template>
+      <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ modalData.nombres.toUpperCase() }}</span>
+      <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ modalData.ci.toUpperCase() }}</span>
+      <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ modalData.titulo.toUpperCase() }}</span>
       
       <div class="flex justify-end gap-2">
-  <Button type="button" label="Cerrar" severity="secondary" @click="handleCloseModal"></Button>
+        <Button type="button" label="Cerrar" severity="primary" @click="handleCloseModal"></Button>
       </div>
-        </Dialog>
-
-
+    </Dialog>
+    
+    
     <!--<div class="modal-backdrop" v-if="showModal" @click.self="closeModal">
       <div class="modal">
         <button class="close" @click="closeModal">×</button>
@@ -71,7 +78,7 @@
         </div>
       </div>
     </div> -->
-
+    
   </div>
 </template>
 
@@ -84,90 +91,90 @@ const lineOptions = ref(null);
 import estudiantesData from '@/service/Estudents.js'
 
 const applyLightTheme = () => {
-    lineOptions.value = {
-        plugins: {
-            legend: {
-                labels: {
-                    color: '#495057'
-                }
-            }
-        },
-        scales: {
-            x: {
-                ticks: {
-                    color: '#495057'
-                },
-                grid: {
-                    color: '#ebedef'
-                }
-            },
-            y: {
-                ticks: {
-                    color: '#495057'
-                },
-                grid: {
-                    color: '#ebedef'
-                }
-            }
+  lineOptions.value = {
+    plugins: {
+      legend: {
+        labels: {
+          color: '#495057'
         }
-    };
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#495057'
+        },
+        grid: {
+          color: '#ebedef'
+        }
+      },
+      y: {
+        ticks: {
+          color: '#495057'
+        },
+        grid: {
+          color: '#ebedef'
+        }
+      }
+    }
+  };
 };
 
 const applyDarkTheme = () => {
-    lineOptions.value = {
-        plugins: {
-            legend: {
-                labels: {
-                    color: '#ebedef'
-                }
-            }
-        },
-        scales: {
-            x: {
-                ticks: {
-                    color: '#ebedef'
-                },
-                grid: {
-                    color: 'rgba(160, 167, 181, .3)'
-                }
-            },
-            y: {
-                ticks: {
-                    color: '#ebedef'
-                },
-                grid: {
-                    color: 'rgba(160, 167, 181, .3)'
-                }
-            }
+  lineOptions.value = {
+    plugins: {
+      legend: {
+        labels: {
+          color: '#ebedef'
         }
-    };
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#ebedef'
+        },
+        grid: {
+          color: 'rgba(160, 167, 181, .3)'
+        }
+      },
+      y: {
+        ticks: {
+          color: '#ebedef'
+        },
+        grid: {
+          color: 'rgba(160, 167, 181, .3)'
+        }
+      }
+    }
+  };
 };
 
 watch(
-    isDarkTheme,
-    (val) => {
-        if (val) {
-            applyDarkTheme();
-        } else {
-            applyLightTheme();
-        }
-    },
-    { immediate: true }
-    );
+isDarkTheme,
+(val) => {
+  if (val) {
+    applyDarkTheme();
+  } else {
+    applyLightTheme();
+  }
+},
+{ immediate: true }
+);
 
 
 // ------- Datos de ejemplo -------
 /*const getEstudentsData = async () => { 
-  try {
-    const response = await fetch('../src/service/Estudents.json');
-    if (!response.ok) {
-      throw new Error('Error al cargar los datos de los estudiantes');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error al cargar los datos de los estudiantes:', error);
-    return [];
-  }
+try {
+const response = await fetch('../src/service/Estudents.json');
+if (!response.ok) {
+throw new Error('Error al cargar los datos de los estudiantes');
+}
+return await response.json();
+} catch (error) {
+console.error('Error al cargar los datos de los estudiantes:', error);
+return [];
+}
 }*/
 
 // ------- states -------
@@ -184,6 +191,7 @@ const showModal = ref(false)
 const modalData = ref(null)
 const modalMessage = ref('')
 const modalTitle = ref('')
+const modalIcon = ref('pi pi-check'); // icono por defecto
 
 // Key localStorage
 const LS_KEY = 'scannedStudents'
@@ -203,40 +211,19 @@ function saveScannedToLS() {
 }
 
 // ------- función para parsear texto QR y extraer CI -------
-function extractCIFromText(text) {
-  // Normalize and try to find a line that contains "ci"
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
-  // 1) buscar etiquetas "ci:" o "ci"
-  for (const l of lines) {
-    const m = l.match(/ci[:\s-]*([A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\.\-\,]+)/i)
-    if (m && m[1]) {
-      return normalizeCI(m[1])
-    }
-  }
-  // 2) fallback: buscar patrón tipo V-15.211.972 o E-12345678
-  const fallback = text.match(/[A-Za-z]-\d[\d\.\,]*/g)
-  if (fallback && fallback.length) {
-    return normalizeCI(fallback[0])
-  }
-  // 3) intentar buscar palabras que empiecen por V o E seguidas de guion y dígitos
-  const any = text.match(/\b[VvEePp]\-?[\d\.\,]{5,}\b/)
-  if (any) return normalizeCI(any[0])
-
-  return null
-}
 
 function normalizeCI(ci) {
   // limpiar espacios y comas, convertir letras a mayúscula, mantener puntos y guiones
-  return ci.replace(/\s+/g, '').replace(/,/g, '.').toUpperCase()
+  return ci.trim()
 }
 
 // ------- manejador onScan -------
 async function onScanSuccess(decodedText, decodedResult) {
   stopScanner()
   isScanning.value = false
-  // decodedText puede tener contenido multiline
-  console.log('QR detectado:', decodedText)
-  const extracted = extractCIFromText(decodedText)
+  //console.log('QR detectado:', decodedText)
+  
+  const extracted = normalizeCI(decodedText)
   if (!extracted) {
     modalTitle.value = 'QR leído — Formato desconocido'
     modalData.value = null
@@ -244,32 +231,36 @@ async function onScanSuccess(decodedText, decodedResult) {
     showModal.value = true
     return
   }
-
+  
   // Buscar en estudiantesData
-  // Normalizar los CI en estudiantesData para comparar
-  const found = estudiantesData.find(s => normalizeCI(s.ci) === extracted)
-  console.log(found)
-
+  const found = estudiantesData.find(s => normalizeCI(s.ci) == extracted)
+  //console.log("FOUND", found)
+  
   if (found) {
-     // opcional: detener tras cada lectura exitosa
+    // opcional: detener tras cada lectura exitosa
     // Verificar si ya está en scanned (localStorage)
-    const already = scanned.value.find(s => normalizeCI(s.ci) === extracted)
-    modalTitle.value = already ? 'GRADUANDO YA ESCANEADO ⚠️' : 'GRADUANDO VERIFICADO ✔️'
-    modalData.value = found
-    //modalMessage.value = already ? 'GRADUANDO YA ESCANEADO ⚠️' : 'Persona registrada y almacenada.'
-    showModal.value = true
-
+    const already = scanned.value.find(s => normalizeCI(s.ci) == extracted)
+    //modalTitle.value = already ? 'GRADUANDO YA ESCANEADO ⚠️' : 'GRADUANDO VERIFICADO ✔️'
+    if(already){
+      modalTitle.value = 'GRADUANDO YA INGRESADO'
+      modalIcon.value = 'pi pi-exclamation-triangle'; // icono de advertencia
+    }else{
+      modalTitle.value = 'GRADUANDO VERIFICADO'
+      modalIcon.value = 'pi pi-check'; // icono de éxito
+    }
+    
     if (!already) {
       scanned.value.push(found)
       saveScannedToLS()
     }
   } else {
     isScanning.value = false // opcional: detener tras cada lectura
-    modalTitle.value = 'No encontrado'
-    modalData.value = { nombres: '—', ci: extracted, titulo: '—' }
-    modalMessage.value = 'La CI no coincide con la lista de estudiantes.'
-    showModal.value = true
+    modalData.value = { nombres: '?', ci: extracted, titulo: '?' }
+    modalTitle.value = 'La CI no coincide con la lista de estudiantes.'
+    modalIcon.value = 'pi pi-times-circle'; // icono de error
   }
+  modalData.value = found
+  showModal.value = true
 }
 
 // ------- iniciar/ detener scanner -------
@@ -278,9 +269,7 @@ async function startScanner() {
   const qrRegionId = 'reader'
   // instancia Html5Qrcode con id del contenedor
   html5QrcodeScanner = new Html5Qrcode(qrRegionId, /* verbose= */ false)
-
   const config = { fps: 10, qrbox: 250 }
-
   try {
     const cameraId = selectedCameraId.value || (cameras.value[0] && cameras.value[0].id)
     if (!cameraId) {
@@ -288,18 +277,18 @@ async function startScanner() {
       return
     }
     await html5QrcodeScanner.start(
-      cameraId,
-      config,
-      (decodedText, decodedResult) => {
-        // Al detectar: ejecutar handler y opcionalmente parar por un momento para evitar lecturas repetidas
-        onScanSuccess(decodedText, decodedResult)
-        isScanning.value = false
-        // No detenemos para permitir múltiples lecturas, pero podrías pausar si lo deseas
-      },
-      (errorMessage) => {
-        // fallos de lectura (opcional)
-        // console.log('parse error', errorMessage)
-      }
+    cameraId,
+    config,
+    (decodedText, decodedResult) => {
+      // Al detectar: ejecutar handler y opcionalmente parar por un momento para evitar lecturas repetidas
+      onScanSuccess(decodedText, decodedResult)
+      isScanning.value = false
+      // No detenemos para permitir múltiples lecturas, pero podrías pausar si lo deseas
+    },
+    (errorMessage) => {
+      // fallos de lectura (opcional)
+      // console.log('parse error', errorMessage)
+    }
     )
     isScanning.value = true
   } catch (err) {
@@ -353,19 +342,19 @@ async function listCameras() {
   }
 }
 
-// lifecycle
+// ciclo de vida
 onMounted(async () => {
   loadScannedFromLS()
   await listCameras()
   var cantCameras = cameras.value.length-1;
-
+  
   //if(cantCameras === 1){
-   // selectedCameraId.value = cameras.value[0].id
-
+  // selectedCameraId.value = cameras.value[0].id
+  
   //}else if(cantCameras > 1){
-    selectedCameraId.value = cameras.value[cantCameras].id;
+  selectedCameraId.value = cameras.value[cantCameras].id;
   //}
-
+  
   //console.log(selectedCameraId.value);
   //estudiantesData.value = await getEstudentsData()
   //console.log('Datos de estudiantes cargados:', estudiantesData.value)
