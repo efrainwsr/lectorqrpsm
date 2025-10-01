@@ -5,4 +5,7 @@ import { reactive, ref } from 'vue'
   totalBs: ref(0),
   bcvPrice: ref(0),
   resetCant: ref(false),
+
+  scanned: ref([]),
+  scannedCounts: ref({}),
 }

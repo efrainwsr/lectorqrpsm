@@ -1,24 +1,11 @@
 <template>
   <div class="container">
-    <h1>Escáner QR - Estudiantes</h1>
-    
-    <div class="controls">
-      <label for="cameraSelect">Seleccionar cámara:</label>
-      <Select id="cameraSelect" v-model="selectedCameraId">
-        <option v-for="cam in cameras" :key="cam.id" :value="cam.id">
-          {{ cam.label }}
-        </option>
-      </Select>
-    </div>
-    
-    <!--<div class="card flex justify-center">
-      <Select v-model="selectedCameraId" :options="cameras.id" :optionLabel="cameras.label" placeholder="Select a City" checkmark :highlightOnSelect="false" class="w-full md:w-56"></Select>
-    </div>-->
+    <h1>Escaner de invitaciones</h1>
     
     <div class="controls flex justify-center">
-      <Button @click="startScanner" severity="success" :disabled="isScanning" class="mx-1">Iniciar</Button>
-      <Button @click="stopScanner" severity="warning" :disabled="!isScanning" class="mx-1">Detener</Button>
-      <Button @click="clearScanned" severity="danger" class="mx-1">Borrar almacenados</Button>
+      <Button @click="startScanner" severity="success" :disabled="isScanning" class="mx-1"><i class="pi pi-play"></i></Button>
+      <Button @click="stopScanner" severity="secondary" :disabled="!isScanning" class="mx-1"><i class="pi pi-pause"></i></Button>
+      <Button @click="clearScanned" severity="danger" class="mx-1 mr-4"><i class="pi pi-trash"></i></Button>
     </div>
     
     <div id="reader" style="width: 500px; max-width: 100%; margin-top: 1rem; margin-bottom: 1rem;"></div>
@@ -27,58 +14,44 @@
       <span class="text-surface-500 dark:text-surface-400 block mb-2"></span>
       <div v-if="scanned.length">
         <div v-for="s in scanned" :key="s.ci">
-          <Button  class="mb-1 " severity="success">{{ s.nombres }} — {{ s.ci }} — {{ s.titulo }}</Button>
+          <Button  class="mb-1 " severity="secondary">{{ s.nombres }} — {{ s.ci }} — {{ s.titulo }}</Button>
         </div>
       </div>
       <p v-else>No hay escaneados aún.</p>
     </div>
     
-    <!--<div class="card flex justify-center">
-      <VirtualScroller :items="scanned" :itemSize="50" class="border border-surface-200 dark:border-surface-700 rounded" style="width: 650px; height: 200px">
-        <template v-slot:item="{ item, options }">
-          <div :class="['flex items-center p-1', { 'bg-surface-100 dark:bg-surface-700': options.odd }]" style="height: 20px">{{ item.ci.toUpperCase()+ ' - ' + item.nombres.toUpperCase()+ ' - ' + item.titulo.toUpperCase() }}</div>
-        </template>
-      </VirtualScroller>
-    </div>-->
-    
-    
-    
     <!-- Modal -->
-    
     <Dialog v-model:visible="showModal" modal :style="{ width: '25rem' }">
+      <!-- Header -->
       <template #header>
-        <div class="inline-flex items-center justify-center gap-2">
-            <i v-if="modalTitle=='GRADUANDO VERIFICADO'" :class="modalIcon" style="color: green; font-size: 2rem" > </i>
-            <i v-if="modalTitle=='GRADUANDO YA INGRESADO'" :class="modalIcon" style="color: orange; font-size: 2rem" > </i>
-            <i v-if="modalTitle=='NO ESTA EN LA LISTA DE INVITADOS'" :class="modalIcon" style="color: red; font-size: 2rem" > </i>
-            <span class="font-bold whitespace-nowrap ">{{ modalTitle }}</span>
+        <div class="flex items-center justify-center gap-2">
+          <i
+          v-if="modalTitle === 'GRADUANDO VERIFICADO'" class=" text-green-500 text-3xl"></i> 
+          <i v-else-if="modalTitle === 'NO ESTA EN LA LISTA DE INVITADOS'" class="pi pi-times text-red-500 text-3xl"></i>
+          <span class="font-bold text-lg text-center">{{ modalTitle }}</span>
         </div>
-    </template>
-      <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ modalData.nombres.toUpperCase() }}</span>
-      <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ modalData.ci.toUpperCase() }}</span>
-      <span class="text-surface-500 dark:text-surface-400 block mb-2">{{ modalData.titulo.toUpperCase() }}</span>
+      </template>
       
-      <div class="flex justify-end gap-2">
-        <Button type="button" label="Cerrar" severity="primary" @click="handleCloseModal"></Button>
+      <!-- contenido -->
+      <div class=" items-center text-center px-4 py-2">
+        <i :class="modalIcon, modalIconColor"  class="text-5xl mb-2"></i>
+        
+        <!-- mensaje principal -->
+        <div class="text-lg font-semibold mb-4">{{ modalMessage.toUpperCase() }}</div>
+        
+        <!-- Informacion del estudiante -->
+        <div class="text-surface-500 dark:text-surface-400 text-sm space-y-1">
+          <p class="">NOMBRE: {{modalData.nombres.toUpperCase() }}</p>
+          <p>C.I: {{ modalData.ci.toUpperCase() }}</p>
+          <p>CARRERA: {{ modalData.titulo.toUpperCase() }}</p>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="flex justify-end px-4 py-2">
+        <Button type="button" label="Cerrar" severity="secondary" @click="handleCloseModal" />
       </div>
     </Dialog>
-    
-    
-    <!--<div class="modal-backdrop" v-if="showModal" @click.self="closeModal">
-      <div class="modal">
-        <button class="close" @click="closeModal">×</button>
-        <h3>{{ modalTitle }}</h3>
-        <div v-if="modalData">
-          <p><strong>Nombres:</strong> {{ modalData.nombres }}</p>
-          <p><strong>CI:</strong> {{ modalData.ci }}</p>
-          <p><strong>Título:</strong> {{ modalData.titulo }}</p>
-          <p v-if="modalMessage"><em>{{ modalMessage }}</em></p>
-        </div>
-        <div v-else>
-          <p>{{ modalMessage }}</p>
-        </div>
-      </div>
-    </div> -->
     
   </div>
 </template>
@@ -183,16 +156,17 @@ const cameras = ref([])
 const selectedCameraId = ref(0)
 const isScanning = ref(false)
 let html5QrcodeScanner = null
-//const estudiantesData = ref([])
 
 const scanned = ref([]) // desde localStorage
+const scanCounts = ref({})
 
-// Modal
+
 const showModal = ref(false)
 const modalData = ref(null)
 const modalMessage = ref('')
 const modalTitle = ref('')
 const modalIcon = ref('pi pi-check'); // icono por defecto
+const modalIconColor = ref('text-green-500'); // color por defecto  
 
 // Key localStorage
 const LS_KEY = 'scannedStudents'
@@ -202,13 +176,19 @@ function loadScannedFromLS() {
   try {
     const raw = localStorage.getItem(LS_KEY)
     scanned.value = raw ? JSON.parse(raw) : []
+    // Nuevo: cargar conteo de escaneos
+    const rawCounts = localStorage.getItem(LS_KEY + '_counts')
+    scanCounts.value = rawCounts ? JSON.parse(rawCounts) : {}
   } catch (e) {
     console.error('Error parseando localStorage', e)
     scanned.value = []
+    scanCounts.value = {}
   }
 }
 function saveScannedToLS() {
   localStorage.setItem(LS_KEY, JSON.stringify(scanned.value))
+  // Nuevo: guardar conteo de escaneos
+  localStorage.setItem(LS_KEY + '_counts', JSON.stringify(scanCounts.value))
 }
 
 // ------- función para parsear texto QR y extraer CI -------
@@ -219,6 +199,7 @@ function normalizeCI(ci) {
 }
 
 // ------- manejador onScan -------
+
 async function onScanSuccess(decodedText, decodedResult) {
   stopScanner()
   isScanning.value = false
@@ -238,22 +219,39 @@ async function onScanSuccess(decodedText, decodedResult) {
   console.log("FOUND", found)
   
   if (found) {
-    // opcional: detener tras cada lectura exitosa
-    // Verificar si ya está en scanned (localStorage)
-    const already = scanned.value.find(s => normalizeCI(s.ci) == extracted)
-    //modalTitle.value = already ? 'GRADUANDO YA ESCANEADO ⚠️' : 'GRADUANDO VERIFICADO ✔️'
-    if(already){
-      modalTitle.value = 'GRADUANDO YA INGRESADO'
-      modalIcon.value = 'pi pi-exclamation-triangle'; // icono de advertencia
-        modalData.value = found
-        showModal.value = true
-    }else{
-      modalTitle.value = 'GRADUANDO VERIFICADO'
-      modalIcon.value = 'pi pi-check'; // icono de éxito
-        modalData.value = found
-        showModal.value = true
+    // Nuevo: contar escaneos por CI
+    if (!scanCounts.value[extracted]) {
+      scanCounts.value[extracted] = 0
     }
+    scanCounts.value[extracted]++
+    saveScannedToLS()
     
+    let count = scanCounts.value[extracted]
+    let mensaje = ''
+    if (count === 1) {
+      mensaje = 'invitacion 1/2'
+      modalTitle.value = 'GRADUANDO VERIFICADO'
+      modalIcon.value = 'pi pi-check'
+      modalIconColor.value = 'text-green-500' 
+      
+    } else if (count === 2) {
+      mensaje = 'invitacion 2/2'
+      modalTitle.value = 'GRADUANDO VERIFICADO'
+      modalIcon.value = 'pi pi-check'
+      modalIconColor.value = 'text-green-500' 
+      
+    } else {
+      mensaje = 'TODAS LAS INVITACIONES FUERON ESCANEADAS'
+      modalTitle.value = 'GRADUANDO VERIFICADO'
+      modalIcon.value = 'pi pi-times'
+      modalIconColor.value = 'text-red-500'  
+    }
+    modalMessage.value = mensaje
+    modalData.value = found
+    showModal.value = true
+    
+    // Solo agregar a scanned la primera vez
+    const already = scanned.value.find(s => normalizeCI(s.ci) == extracted)
     if (!already) {
       scanned.value.push(found)
       saveScannedToLS()
@@ -261,11 +259,12 @@ async function onScanSuccess(decodedText, decodedResult) {
   } else {
     isScanning.value = false // opcional: detener tras cada lectura
     showModal.value = true ;
-    modalData.value = { nombres: '', ci: extracted, titulo: '' }
+    modalData.value = { nombres: '', ci: '', titulo: '' }
     modalTitle.value = 'NO ESTA EN LA LISTA DE INVITADOS'
     modalIcon.value = 'pi pi-times'; // icono de error
+    modalMessage.value = 'SIN INVITACION'
+    modalIconColor.value = 'text-red-500' 
   }
-
 }
 
 // ------- iniciar/ detener scanner -------
@@ -291,8 +290,8 @@ async function startScanner() {
       // No detenemos para permitir múltiples lecturas, pero podrías pausar si lo deseas
     },
     (errorMessage) => {
-      // fallos de lectura (opcional)
-      // console.log('parse error', errorMessage)
+      //fallos de lectura (opcional)
+      //console.log('parse error', errorMessage)
     }
     )
     isScanning.value = true
@@ -319,6 +318,7 @@ async function stopScanner() {
 function clearScanned() {
   if (!confirm('¿Borrar todos los escaneados guardados en localStorage?')) return
   scanned.value = []
+  scanCounts.value = {}
   saveScannedToLS()
 }
 
@@ -352,84 +352,10 @@ onMounted(async () => {
   loadScannedFromLS()
   await listCameras()
   var cantCameras = cameras.value.length-1;
-  
-  //if(cantCameras === 1){
-  // selectedCameraId.value = cameras.value[0].id
-  
-  //}else if(cantCameras > 1){
   selectedCameraId.value = cameras.value[cantCameras].id;
-  //}
-  
-  //console.log(selectedCameraId.value);
-  //estudiantesData.value = await getEstudentsData()
-  //console.log('Datos de estudiantes cargados:', estudiantesData.value)
 })
 
 onBeforeUnmount(() => {
   stopScanner()
 })
 </script>
-
-
-
-
-
-
-
-<style scoped>
-/*
-.container {
-  max-width: 900px;
-  margin: 24px auto;
-  padding: 12px;
-  font-family: Arial, sans-serif;
-}
-
-.controls {
-  display:flex;
-  gap:8px;
-  align-items:center;
-  flex-wrap:wrap;
-}
-
-.scanned-list {
-  margin-top: 1rem;
-  border-top: 1px solid #ddd;
-  padding-top: 1rem;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index: 9999;
-}
-
-.modal {
-  background: #fff;
-  padding: 18px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 420px;
-  position: relative;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-}
-
-.close {
-  position:absolute;
-  right:8px;
-  top:6px;
-  border: none;
-  background: transparent;
-  font-size: 22px;
-  cursor:pointer;
-}
-
-button {
-  padding: 8px 12px;
-  cursor:pointer;
-}*/
-</style>

@@ -65,6 +65,12 @@ const isOutsideClicked = (event) => {
 
     return !(sidebarEl.isSameNode(event.target) || sidebarEl.contains(event.target) || topbarEl.isSameNode(event.target) || topbarEl.contains(event.target));
 };
+
+function clearScanned() {
+  if (!confirm('¿Borrar todos los escaneados guardados en localStorage?')) return
+  localStorage.setItem('scannedStudents', JSON.stringify([])) //asign empty array to reset scanned
+  localStorage.setItem('scannedStudents' + '_counts', JSON.stringify({})) // asign empty object to reset counts
+}
 </script>
 
 <template>
@@ -74,20 +80,13 @@ const isOutsideClicked = (event) => {
             <i class="pi pi-bars"></i>
         </button>
 
-
-            <!--<Chip :label="store.total.value.toFixed(2)" icon="pi pi-dollar"></Chip>
-            <Chip :label="'Bs  ' + store.totalBs.value.toFixed(2)"  ></Chip>
-            <Chip :label="'Tasa: '+store.bcvPrice.value"></Chip>-->
-
         <button class="p-link layout-topbar-menu-button layout-topbar-button" @click="onTopBarMenuButton()">
             <i class="pi pi-ellipsis-v"></i>
         </button>
 
-        
-        
 
         <div class="layout-topbar-menu" :class="topbarMenuClasses">
-            <button @click="borrarCuenta" class="p-link layout-topbar-button">
+            <button @click="clearScanned" class="p-link layout-topbar-button">
                 <i class="pi pi-eraser"></i>
                 <span>Borrar</span>
             </button>
