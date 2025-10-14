@@ -8,7 +8,6 @@ const model = ref([
         label: 'Home',
         items: [{ label: 'Escaner', icon: 'pi pi-fw pi-home', to: '/' }]
     }
-
 ]);
 </script>
 
@@ -23,7 +22,7 @@ const model = ref([
                 <img src="/layout/images/banner-primeblocks.png" alt="Prime Blocks" class="w-full mt-3" />
             </a>
         </li>-->
-    </ul> 
+    </ul>
 </template>
 
 <style lang="scss" scoped></style>

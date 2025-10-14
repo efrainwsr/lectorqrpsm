@@ -216,7 +216,6 @@ const calculateCustomerTotal = (name) => {
                         </template>
                     </Column>
                 </DataTable>
-                
             </div>
         </div>
 

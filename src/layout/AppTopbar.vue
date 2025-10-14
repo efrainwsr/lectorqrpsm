@@ -1,9 +1,9 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount  } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useLayout } from '@/layout/composables/layout';
 import { useRouter } from 'vue-router';
 import { store } from '../service/store.js';
- 
+
 const { layoutConfig, onMenuToggle } = useLayout();
 
 const outsideClickListener = ref(null);
@@ -22,7 +22,7 @@ const logoUrl = computed(() => {
     return `layout/images/${layoutConfig.darkTheme.value ? 'logo-white' : 'logo-dark'}.svg`;
 });
 
-const borrarCuenta = () =>{
+const borrarCuenta = () => {
     store.total.value = 0;
     store.totalBs.value = 0;
     store.resetCant.value = true;
@@ -67,15 +67,14 @@ const isOutsideClicked = (event) => {
 };
 
 function clearScanned() {
-  if (!confirm('¿Borrar todos los escaneados guardados en localStorage?')) return
-  localStorage.setItem('scannedStudents', JSON.stringify([])) //asign empty array to reset scanned
-  localStorage.setItem('scannedStudents' + '_counts', JSON.stringify({})) // asign empty object to reset counts
+    if (!confirm('¿Borrar todos los escaneados guardados en localStorage?')) return;
+    localStorage.setItem('scannedStudents', JSON.stringify([])); //asign empty array to reset scanned
+    localStorage.setItem('scannedStudents' + '_counts', JSON.stringify({})); // asign empty object to reset counts
 }
 </script>
 
 <template>
     <div class="layout-topbar">
-        
         <button class="p-link layout-menu-button layout-topbar-button" @click="onMenuToggle()">
             <i class="pi pi-bars"></i>
         </button>
@@ -83,7 +82,6 @@ function clearScanned() {
         <button class="p-link layout-topbar-menu-button layout-topbar-button" @click="onTopBarMenuButton()">
             <i class="pi pi-ellipsis-v"></i>
         </button>
-
 
         <div class="layout-topbar-menu" :class="topbarMenuClasses">
             <button @click="clearScanned" class="p-link layout-topbar-button">

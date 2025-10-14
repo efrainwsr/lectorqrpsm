@@ -1,4 +1,6 @@
 import { createApp } from 'vue';
+// Initialize Firebase (and enable Firestore persistence)
+import '@/firebase';
 import App from './App.vue';
 import router from './router';
 

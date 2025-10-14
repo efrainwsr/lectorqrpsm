@@ -1,5 +1,5 @@
 <script setup>
-    /*import { ref, onMounted } from 'vue'; 
+/*import { ref, onMounted } from 'vue'; 
     import { useToast } from 'primevue/usetoast';
     const toast = useToast();
 
@@ -165,11 +165,9 @@ const saveMenuItem = async (e)=>{
     </div>
 
 </div>
--->
-</template>
+--></template>
 
-
-   <!--
+<!--
         <div class="col-12 md:col-6">
             <div class="card p-fluid">
                 <h5>Vertical</h5>

@@ -1,5 +1,3 @@
-
-
 <script setup>
 import { ref, watch } from 'vue';
 import { useLayout } from 'primevue/uselayouteffect';
@@ -75,6 +73,5 @@ watch(
         }
     },
     { immediate: true }
-    );
-
+);
 </script>
