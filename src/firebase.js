@@ -1,8 +1,5 @@
-// Firebase initialization and Firestore with offline persistence
-import { initializeApp } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
-import { getFirestore, enableIndexedDbPersistence, collection, doc, getDoc, setDoc, onSnapshot, query, orderBy, serverTimestamp, increment, getDocs, deleteDoc } from 'firebase/firestore';
-
+// Lazy-load Firebase only at runtime (client). This prevents Vite/Rollup from
+// trying to resolve `firebase/*` during SSR/build steps (fixes Vercel build).
 const firebaseConfig = {
     apiKey: 'AIzaSyDPDPdfVf_x8T2s1i8qRFZXyZahDAADjTs',
     authDomain: 'qrpsm-7d918.firebaseapp.com',
@@ -13,61 +10,71 @@ const firebaseConfig = {
     measurementId: 'G-MXF9DJZ3ZL'
 };
 
-const app = initializeApp(firebaseConfig);
-try {
-    // analytics may throw in some environments (SSR etc.)
-    getAnalytics(app);
-} catch (e) {
-    // ignore analytics errors
+let initPromise = null;
+let cached = { app: null, db: null };
+
+async function initFirebase() {
+    if (initPromise) return initPromise;
+    initPromise = (async () => {
+        // run only in browser
+        if (typeof window === 'undefined') return cached;
+
+        const { initializeApp } = await import('firebase/app');
+        const { getAnalytics } = await import('firebase/analytics').catch(() => ({}));
+        const firestore = await import('firebase/firestore');
+
+        const app = initializeApp(firebaseConfig);
+        try {
+            if (getAnalytics) getAnalytics(app);
+        } catch (e) {
+            // ignore
+        }
+
+        const { getFirestore, enableIndexedDbPersistence } = firestore;
+        const db = getFirestore(app);
+        try {
+            await enableIndexedDbPersistence(db);
+        } catch (e) {
+            console.warn('Could not enable IndexedDB persistence:', e);
+        }
+
+        cached = { app, db };
+        return cached;
+    })();
+    return initPromise;
 }
 
-const db = getFirestore(app);
-
-// Enable offline persistence using IndexedDB. If another tab has persistence
-// enabled, this will fail; we catch and log the error.
-enableIndexedDbPersistence(db).catch((err) => {
-    // Possible errors: failed-precondition (multiple tabs) or unimplemented (browser)
-    console.warn('Could not enable IndexedDB persistence:', err);
-});
-
-export { db };
-
-// Minimal helpers for the `graduandos` collection.
-// Each document's ID is the cedula (cédula de identidad) as you described.
-const graduandosCol = collection(db, 'graduandos');
-
+// Helpers
 async function getGraduando(cedula) {
+    const { db } = await initFirebase();
+    if (!db) return null;
+    const { doc, getDoc } = await import('firebase/firestore');
     const ref = doc(db, 'graduandos', String(cedula));
     const snap = await getDoc(ref);
     return snap.exists() ? snap.data() : null;
 }
 
 async function setGraduando(cedula, data) {
+    const { db } = await initFirebase();
+    if (!db) return null;
+    const { doc, setDoc } = await import('firebase/firestore');
     const ref = doc(db, 'graduandos', String(cedula));
-    // merge: true so we don't overwrite unintentionally
     return setDoc(ref, data, { merge: true });
 }
 
-function onGraduando(cedula, callback) {
+async function onGraduando(cedula, callback) {
+    const { db } = await initFirebase();
+    if (!db) return () => {};
+    const { doc, onSnapshot } = await import('firebase/firestore');
     const ref = doc(db, 'graduandos', String(cedula));
-    // returns unsubscribe function
-    return onSnapshot(ref, (snap) => {
-        callback(snap.exists() ? snap.data() : null);
-    });
+    return onSnapshot(ref, (snap) => callback(snap.exists() ? snap.data() : null));
 }
 
-export { graduandosCol, getGraduando, setGraduando, onGraduando };
-
-// Scans helpers: store and subscribe to scanned QRs so all clients can see them.
-const scansCol = collection(db, 'scans');
-
-/**
- * Mark a cedula as scanned: increments a counter and sets lastScanned timestamp.
- * Returns the latest scan doc data after the update.
- */
 async function markScan(cedula, estudiante = {}) {
+    const { db } = await initFirebase();
+    if (!db) return null;
+    const { doc, setDoc, getDoc, serverTimestamp, increment } = await import('firebase/firestore');
     const ref = doc(db, 'scans', String(cedula));
-    // merge an incremented counter and metadata
     await setDoc(
         ref,
         {
@@ -79,13 +86,15 @@ async function markScan(cedula, estudiante = {}) {
         },
         { merge: true }
     );
-
-    // read back current value (may be eventually consistent but works with persistence)
     const snap = await getDoc(ref);
     return snap.exists() ? snap.data() : null;
 }
 
-function subscribeScans(callback) {
+async function subscribeScans(callback) {
+    const { db } = await initFirebase();
+    if (!db) return () => {};
+    const { collection, query, orderBy, onSnapshot } = await import('firebase/firestore');
+    const scansCol = collection(db, 'scans');
     const q = query(scansCol, orderBy('lastScanned', 'desc'));
     return onSnapshot(
         q,
@@ -94,27 +103,41 @@ function subscribeScans(callback) {
             snapshot.forEach((d) => items.push({ id: d.id, ...d.data() }));
             callback(items);
         },
-        (err) => {
-            console.error('Error en snapshot de scans:', err);
-        }
+        (err) => console.error('Error en snapshot de scans:', err)
     );
 }
 
-export { scansCol, markScan, subscribeScans };
-
-/**
- * Delete all documents in the scans collection. This issues individual deletes
- * for each document (batched deletes could be used for large sets).
- * Returns a promise that resolves when all deletes have been sent.
- */
 async function deleteAllScans() {
-    const snaps = await getDocs(scansCol);
+    const { db } = await initFirebase();
+    if (!db) return;
+    const { collection, getDocs, deleteDoc, doc } = await import('firebase/firestore');
+    const snaps = await getDocs(collection(db, 'scans'));
     const deletes = [];
-    snaps.forEach((d) => {
-        const ref = doc(db, 'scans', d.id);
-        deletes.push(deleteDoc(ref));
-    });
+    snaps.forEach((d) => deletes.push(deleteDoc(doc(db, 'scans', d.id))));
     await Promise.all(deletes);
 }
 
-export { deleteAllScans };
+export { getGraduando, setGraduando, onGraduando, markScan, subscribeScans, deleteAllScans };
+
+// Subscribe to the 'graduandos' collection (ordered by nombres)
+async function subscribeGraduandos(callback) {
+    const { db } = await initFirebase();
+    if (!db) return () => {};
+    const { collection, query, orderBy, onSnapshot } = await import('firebase/firestore');
+    const col = collection(db, 'graduandos');
+    const q = query(col, orderBy('nombres'));
+    return onSnapshot(
+        q,
+        (snapshot) => {
+            const items = [];
+            snapshot.forEach((d) => {
+                const data = d.data() || {};
+                items.push({ id: d.id, ...data, ci: data.ci || d.id });
+            });
+            callback(items);
+        },
+        (err) => console.error('Error en snapshot de graduandos:', err)
+    );
+}
+
+export { subscribeGraduandos };
