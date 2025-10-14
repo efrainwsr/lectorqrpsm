@@ -97,6 +97,13 @@ return [];
 }
 }*/
 
+
+function vibrarCorto() {
+    if ("vibrate" in navigator) {
+        navigator.vibrate(100);
+    }
+}
+
 // ------- states -------
 const cameras = ref([]);
 const selectedCameraId = ref(0);
@@ -135,7 +142,7 @@ function loadScannedFromLS() {
         scanCounts.value = {};
     }
 }
-function saveScannedToLS() {
+async function saveScannedToLS() {
     localStorage.setItem(LS_KEY, JSON.stringify(scanned.value));
     // Nuevo: guardar conteo de escaneos
     localStorage.setItem(LS_KEY + '_counts', JSON.stringify(scanCounts.value));
@@ -152,6 +159,10 @@ function normalizeCI(ci) {
 
 async function onScanSuccess(decodedText, decodedResult) {
     // ignore scans while a clear operation is in progress
+    stopScanner();
+    vibrarCorto();
+    isScanning.value = false;
+
     if (clearingInProgress.value) return;
     // prevent handling multiple rapid detections
     if (scanLocked.value) return;
@@ -159,8 +170,7 @@ async function onScanSuccess(decodedText, decodedResult) {
     // release lock shortly after to allow new scans
     setTimeout(() => (scanLocked.value = false), 1500);
 
-    stopScanner();
-    isScanning.value = false;
+    
     //console.log('QR detectado:', decodedText)
 
     const cedula = normalizeCI(decodedText);
@@ -293,7 +303,7 @@ async function clearScanned() {
 
     scanned.value = [];
     scanCounts.value = {};
-    saveScannedToLS();
+    await saveScannedToLS();
     // try to delete remote scans as well
     try {
         await deleteAllScans();
@@ -440,8 +450,8 @@ onBeforeUnmount(() => {
                 <div class="text-lg font-semibold mb-4">{{ modalMessage.toUpperCase() }}</div>
 
                 <!-- Informacion del estudiante -->
-                <div class="text-surface-500 dark:text-surface-400 text-sm space-y-1">
-                    <p class="">NOMBRE: {{ modalData.nombres.toUpperCase() }}</p>
+                <div class="text-lg text-surface-500 dark:text-surface-400 text-sm space-y-1">
+                    <p class="">{{ modalData.nombres.toUpperCase() }}</p>
                     <p>C.I: {{ modalData.ci.toUpperCase() }}</p>
                     <p>CARRERA: {{ modalData.titulo.toUpperCase() }}</p>
                 </div>

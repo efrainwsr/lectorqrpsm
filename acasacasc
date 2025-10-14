@@ -1,0 +1,83 @@
+[33mcommit 70679b0998067a0c98061f8c5bbd30ffd3ccc371[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Wed Oct 1 15:33:38 2025 -0400
+
+    Contador de invitaciones agregado
+
+[33mcommit e1311c9cc11b2f5de7a335b1f352fe99ae38e6a9[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Fri Sep 26 18:24:16 2025 -0400
+
+    Alerta de mp encontrado corregida y nuevo icono
+
+[33mcommit f6cbfbdcd338b6759de3e135a8962196a08c047f[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Fri Sep 26 18:19:49 2025 -0400
+
+    validacion de los no encontrados añadida
+
+[33mcommit cb8429f3ffbf97fa9b3daa84da980625ea34875b[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Fri Sep 26 16:38:06 2025 -0400
+
+    QR MODIFICADO CON SOLO LA CEDULA
+
+[33mcommit 037aa2b4c319901b3bb11ca637535a12311ab867[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Fri Sep 26 13:14:23 2025 -0400
+
+    Nueva interfaz, nueva libreria de QR
+
+[33mcommit 6e267da933cc42f29a3f7950f4d43ebb4ed911ee[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Thu Sep 25 18:14:36 2025 -0400
+
+    Guardado en LS agregado
+
+[33mcommit 94939cb2aa7ff198ff52ccc330d05bd7af956414[m
+Author: efrain <efrain.figueredowsr@gmail.com>
+Date:   Thu Sep 25 00:11:25 2025 -0400
+
+    De vuelta a isPaused, sin stopscanner
+
+[33mcommit f99c9a0a12248c187e34374a8e98750f8b672534[m
+Author: efrain <efrain.figueredowsr@gmail.com>
+Date:   Thu Sep 25 00:01:01 2025 -0400
+
+    PAUSA ANADIDA Y TOPBAR REMOVIDO
+
+[33mcommit 8a5275a1b1c5d3000b4ff2dbbd8922019742d477[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Wed Sep 24 18:49:30 2025 -0400
+
+    PAUSA DE ESCANEO Y NOTIFICACION MEJORADA
+
+[33mcommit 424982099828fc8be511f908a9abd12304e11f7e[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Wed Sep 24 13:20:11 2025 -0400
+
+    service agregado sin gitignore
+
+[33mcommit f2f671b36bc3dbab3171726aecf25f8b10ee5791[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Wed Sep 24 13:16:51 2025 -0400
+
+    faltantes corregidos
+
+[33mcommit d53699f1fe94930d4f6f40fb570929e361a6dce2[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Wed Sep 24 13:12:40 2025 -0400
+
+    CHART AGREGADO NUEVAMENTE 2
+
+[33mcommit ed76e615915a398741488d3021e7d20ee35ca105[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Wed Sep 24 13:10:58 2025 -0400
+
+    CHART AGREGADO NUEVAMENTE
+
+[33mcommit b8c5fedd222f451ca393370bc4dfa9156ba1c1e0[m
+Author: EFRAIN FIGUEREDO <EFRAIN.FIGUEREDO@PSMPUERTOORDAZ.EDU.VE>
+Date:   Wed Sep 24 13:02:36 2025 -0400
+
+    SCANQRPSM

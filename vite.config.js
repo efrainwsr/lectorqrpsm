@@ -2,7 +2,7 @@ import { fileURLToPath, URL } from 'node:url';
 
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { VitePWA } from 'vite-plugin-pwa'
+import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
@@ -12,16 +12,16 @@ export default defineConfig(() => {
             VitePWA({
                 registerType: 'autoUpdate',
                 devOptions: {
-                  enabled: true
+                    enabled: true
                 },
                 manifest: {
-                  "name": "QR PSM SCAN",
-                  "short_name": "QR PSM SCAN",
-                  "display": "standalone",
-                  "background_color": "#ffffff",
-                  "theme_color": "#000000",
-                  "icons": [
-                    /*{
+                    name: 'QR PSM SCAN',
+                    short_name: 'QR PSM SCAN',
+                    display: 'standalone',
+                    background_color: '#ffffff',
+                    theme_color: '#000000',
+                    icons: [
+                        /*{
                       "src": "/32.png",
                       "sizes": "32x32",
                       "type": "image/png"
@@ -56,12 +56,12 @@ export default defineConfig(() => {
                       "sizes": "152x152",
                       "type": "image/png"
                     },*/
-                    {
-                      "src": "/192.png",
-                      "sizes": "192x192",
-                      "type": "image/png"
-                    },
-                    /*{
+                        {
+                            src: '/192.png',
+                            sizes: '192x192',
+                            type: 'image/png'
+                        },
+                        /*{
                       "src": "/256.png",
                       "sizes": "256x256",
                       "type": "image/png"
@@ -71,20 +71,29 @@ export default defineConfig(() => {
                       "sizes": "384x384",
                       "type": "image/png"
                     },*/
-                    {
-                      "src": "/512.png",
-                      "sizes": "512x512",
-                      "type": "image/png"
-                    }
-                  ]
+                        {
+                            src: '/512.png',
+                            sizes: '512x512',
+                            type: 'image/png'
+                        }
+                    ]
                 }
-                
-              }),
+            })
         ],
         resolve: {
             alias: {
                 '@': fileURLToPath(new URL('./src', import.meta.url))
             }
         }
+    ,
+    build: {
+      rollupOptions: {
+        external: [
+          'firebase/app',
+          'firebase/analytics',
+          'firebase/firestore'
+        ]
+      }
+    }
     };
 });

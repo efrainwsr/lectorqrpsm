@@ -8,6 +8,7 @@
         "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
     },
     "dependencies": {
+        "firebase": "^9.22.1",
         "axios": "^1.5.1",
         "chart.js": "3.3.2",
         "html5-qrcode": "^2.3.8",
