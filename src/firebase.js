@@ -19,9 +19,9 @@ async function initFirebase() {
         // run only in browser
         if (typeof window === 'undefined') return cached;
 
-        const { initializeApp } = await import('firebase/app');
-        const { getAnalytics } = await import('firebase/analytics').catch(() => ({}));
-        const firestore = await import('firebase/firestore');
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js');
+    const { getAnalytics } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics.js').catch(() => ({}));
+    const firestore = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
 
         const app = initializeApp(firebaseConfig);
         try {
@@ -48,7 +48,7 @@ async function initFirebase() {
 async function getGraduando(cedula) {
     const { db } = await initFirebase();
     if (!db) return null;
-    const { doc, getDoc } = await import('firebase/firestore');
+    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
     const ref = doc(db, 'graduandos', String(cedula));
     const snap = await getDoc(ref);
     return snap.exists() ? snap.data() : null;
@@ -57,7 +57,7 @@ async function getGraduando(cedula) {
 async function setGraduando(cedula, data) {
     const { db } = await initFirebase();
     if (!db) return null;
-    const { doc, setDoc } = await import('firebase/firestore');
+    const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
     const ref = doc(db, 'graduandos', String(cedula));
     return setDoc(ref, data, { merge: true });
 }
@@ -65,7 +65,7 @@ async function setGraduando(cedula, data) {
 async function onGraduando(cedula, callback) {
     const { db } = await initFirebase();
     if (!db) return () => {};
-    const { doc, onSnapshot } = await import('firebase/firestore');
+    const { doc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
     const ref = doc(db, 'graduandos', String(cedula));
     return onSnapshot(ref, (snap) => callback(snap.exists() ? snap.data() : null));
 }
@@ -73,7 +73,7 @@ async function onGraduando(cedula, callback) {
 async function markScan(cedula, estudiante = {}) {
     const { db } = await initFirebase();
     if (!db) return null;
-    const { doc, setDoc, getDoc, serverTimestamp, increment } = await import('firebase/firestore');
+    const { doc, setDoc, getDoc, serverTimestamp, increment } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
     const ref = doc(db, 'scans', String(cedula));
     await setDoc(
         ref,
@@ -93,7 +93,7 @@ async function markScan(cedula, estudiante = {}) {
 async function subscribeScans(callback) {
     const { db } = await initFirebase();
     if (!db) return () => {};
-    const { collection, query, orderBy, onSnapshot } = await import('firebase/firestore');
+    const { collection, query, orderBy, onSnapshot } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
     const scansCol = collection(db, 'scans');
     const q = query(scansCol, orderBy('lastScanned', 'desc'));
     return onSnapshot(
@@ -110,7 +110,7 @@ async function subscribeScans(callback) {
 async function deleteAllScans() {
     const { db } = await initFirebase();
     if (!db) return;
-    const { collection, getDocs, deleteDoc, doc } = await import('firebase/firestore');
+    const { collection, getDocs, deleteDoc, doc } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
     const snaps = await getDocs(collection(db, 'scans'));
     const deletes = [];
     snaps.forEach((d) => deletes.push(deleteDoc(doc(db, 'scans', d.id))));
@@ -123,7 +123,7 @@ export { getGraduando, setGraduando, onGraduando, markScan, subscribeScans, dele
 async function subscribeGraduandos(callback) {
     const { db } = await initFirebase();
     if (!db) return () => {};
-    const { collection, query, orderBy, onSnapshot } = await import('firebase/firestore');
+    const { collection, query, orderBy, onSnapshot } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
     const col = collection(db, 'graduandos');
     const q = query(col, orderBy('nombres'));
     return onSnapshot(
