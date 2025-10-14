@@ -331,6 +331,14 @@ onMounted(async () => {
     // Subscribe to remote scans so the scanned list is synchronized across clients
     unsubScans = subscribeScans((items) => {
         // items: { id, ci, nombres, titulo, count, lastScanned }
+        // If remote returns empty (e.g. offline or no remote scans) don't erase local list
+        if (!items || items.length === 0) {
+            if (scanned.value && scanned.value.length) {
+                // keep local list as-is
+                return;
+            }
+        }
+
         scanned.value = items.map((i) => ({ nombres: i.nombres || '', ci: i.ci || i.id, titulo: i.titulo || '', count: i.count || 1 }));
         // sync remote counts into local scanCounts map
         items.forEach((i) => {
