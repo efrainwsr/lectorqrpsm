@@ -11,6 +11,9 @@ const estudiantesData = ref([]);
 let unsubEstudiantes = null;
 let unsubScans = null;
 
+const errorS = '../src/assets/error.mp3';
+const successS = '../src/assets/success.mp3';
+
 const applyLightTheme = () => {
     lineOptions.value = {
         plugins: {
@@ -97,6 +100,26 @@ return [];
 }
 }*/
 
+function errorSound() {
+    const audio = new Audio(errorS); 
+    try {
+        audio.play();
+    } catch (error) {
+        console.error("Error al intentar reproducir el audio:", error);
+        alert("El navegador pudo haber bloqueado la reproducción automática. ¡Inténtalo de nuevo con un clic!");
+    }
+}
+
+function successSound() {
+    const audio = new Audio(successS); 
+    try {
+        audio.play();
+
+    } catch (error) {
+        console.error("Error al intentar reproducir el audio:", error);
+        alert("El navegador pudo haber bloqueado la reproducción automática. ¡Inténtalo de nuevo con un clic!");
+    }
+}
 
 function vibrarCorto() {
     if ("vibrate" in navigator) {
@@ -142,6 +165,8 @@ function loadScannedFromLS() {
         scanCounts.value = {};
     }
 }
+
+
 async function saveScannedToLS() {
     localStorage.setItem(LS_KEY, JSON.stringify(scanned.value));
     // Nuevo: guardar conteo de escaneos
@@ -175,6 +200,7 @@ async function onScanSuccess(decodedText, decodedResult) {
 
     const cedula = normalizeCI(decodedText);
     if (!cedula) {
+        errorSound();
         modalTitle.value = 'QR leído — Formato desconocido';
         modalData.value = null;
         modalMessage.value = 'No se pudo extraer la CI del código QR.';
@@ -187,6 +213,7 @@ async function onScanSuccess(decodedText, decodedResult) {
     console.log('FOUND', found);
 
     if (found) {
+        
         // Nuevo: contar escaneos por CI
         if (!scanCounts.value[cedula]) {
             scanCounts.value[cedula] = 0;
@@ -202,12 +229,15 @@ async function onScanSuccess(decodedText, decodedResult) {
             modalTitle.value = 'GRADUANDO VERIFICADO';
             modalIcon.value = 'pi pi-check';
             modalIconColor.value = 'text-green-500';
+            successSound();
         } else if (count === MAX_INVITATIONS) {
             mensaje = `invitacion ${MAX_INVITATIONS}/${MAX_INVITATIONS}`;
             modalTitle.value = 'GRADUANDO VERIFICADO';
             modalIcon.value = 'pi pi-check';
             modalIconColor.value = 'text-green-500';
+            successSound();
         } else {
+            errorSound();
             mensaje = 'TODAS LAS INVITACIONES FUERON ESCANEADAS';
             modalTitle.value = 'GRADUANDO VERIFICADO';
             modalIcon.value = 'pi pi-times';
@@ -304,6 +334,7 @@ async function clearScanned() {
     scanned.value = [];
     scanCounts.value = {};
     await saveScannedToLS();
+
     // try to delete remote scans as well
     try {
         await deleteAllScans();
@@ -336,7 +367,10 @@ async function handleCloseModal() {
     modalMessage.value = '';
     // Si el escáner estaba detenido, lo reanudamos
     if (!isScanning.value) {
-        await startScanner();
+        //setTimeout(async () => {
+            await startScanner();
+            
+      //  }, 500);
     }
 }
 
@@ -421,7 +455,7 @@ onBeforeUnmount(() => {
             <span class="text-surface-500 dark:text-surface-400 block mb-2"></span>
             <div v-if="scanned.length">
                 <div v-for="s in scanned" :key="s.ci">
-                    
+                    <p>{{ s.index }}</p>
                     <Button class="mb-1" outlined severity="secondary"><Badge class="mr-1" size="large" :value="s.count > 2 ? 2 : s.count" severity="success"></Badge> {{ s.nombres.toUpperCase() }} — {{ s.titulo.toUpperCase() }} </Button>
                 </div>
             </div>

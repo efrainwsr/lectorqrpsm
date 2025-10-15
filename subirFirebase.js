@@ -1,3 +1,27 @@
+// Script de Node.js para subir datos a Firestore
+// ----------------------------------------------------------------------
+// REQUISITO: Asegúrate de ejecutar 'npm install firebase' en tu terminal.
+// Este script usa módulos ES, por lo que tu package.json debe tener "type": "module".
+// ----------------------------------------------------------------------
+
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+
+// Configuración de Firebase proporcionada por el usuario
+const firebaseConfig = {
+    apiKey: "AIzaSyDPDPdfVf_x8T2s1i8qRFZXyZahDAADjTs",
+    authDomain: "qrpsm-7d918.firebaseapp.com",
+    projectId: "qrpsm-7d918",
+    storageBucket: "qrpsm-7d918.firebasestorage.app",
+    messagingSenderId: "670291055635",
+    appId: "1:670291055635:web:e2a4e6e366d13cc73d1be6",
+    measurementId: "G-MXF9DJZ3ZL"
+};
+
+
+
+
+// Lista de estudiantes a subir (se han excluido las entradas comentadas)
 const estudiantesData = [
     /*{
         nombres: 'Eduardo Jose Gomez Torres ',
@@ -363,28 +387,46 @@ const estudiantesData = [
         titulo: 'Arquitecto'
     }
 ];
+
+// Inicializa Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const COLLECTION_NAME = "graduandos";
+
 /**
- * Fallback subscribe function for non-Firebase builds.
- * It immediately calls the callback with the static array and returns a noop unsubscribe.
- * When Firebase is available, you can replace this module or implement a real onSnapshot-based
- * subscribe that returns an unsubscribe function.
- * @param {(arr: Array<Object>)=>void} callback
- * @returns {() => void} unsubscribe
+ * Sube la lista de estudiantes a la colección de Firestore.
  */
-export function subscribeEstudents(callback) {
-    try {
-        // deliver a copy to avoid accidental mutations
-        callback(Array.from(estudiantesData));
-    } catch (e) {
-        console.error('subscribeEstudents fallback error:', e);
+async function uploadData() {
+    console.log(`Iniciando la carga de ${estudiantesData.length} estudiantes a la colección "${COLLECTION_NAME}"...`);
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const estudiante of estudiantesData) {
+        // Obtenemos el ID del documento a partir del campo 'ci'
+        const docId = estudiante.ci.trim();
+
+        // Referencia del documento en Firestore: graduandos/{ci}
+        const docRef = doc(db, COLLECTION_NAME, docId);
+
+        try {
+            // Usamos setDoc para crear o sobrescribir el documento
+            // La información del estudiante se convierte en el contenido del documento.
+            await setDoc(docRef, estudiante);
+            console.log(`[Éxito] Documento creado para CI: ${docId} (${estudiante.nombres.trim()})`);
+            successCount++;
+        } catch (error) {
+            console.error(`[ERROR] Falló la subida para CI: ${docId}. Error: ${error.message}`);
+            failCount++;
+        }
     }
-    return () => {
-        // noop
-    };
+
+    console.log("--------------------------------------------------");
+    console.log("Proceso de carga completado.");
+    console.log(`Documentos cargados exitosamente: ${successCount}`);
+    console.log(`Errores de carga: ${failCount}`);
+    console.log("--------------------------------------------------");
 }
 
-export function getCachedEstudents() {
-    return estudiantesData;
-}
-
-export default estudiantesData;
+// Ejecuta la función principal
+uploadData().catch(console.error);
