@@ -1,7 +1,6 @@
 {
     "name": "lectorqrpsm",
     "version": "3.8.0",
-    //"type": "module",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
